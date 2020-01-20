@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SuperSparklySelfie.ViewModels;assembly=SuperSparklySelfie"
+             mc:Ignorable="d"
+             x:Class="SuperSparklySelfie.Views.TakeSelfiePage">
+
+    <ContentPage.BindingContext>
+        <vm:TakeSelfiePageViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Content>
+        <StackLayout Padding="15">
+            <Image Source="{Binding ImageForSparkles}"/>
+            <Button 
+                Text="Sparkle Me!"
+                TextColor="White"
+                BackgroundColor="#CC0000"
+                VerticalOptions="EndAndExpand"
+                Command="{Binding TakePhotoCommand}"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
