@@ -1,8 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using MvvmHelpers;
 using Plugin.Media;
 using Plugin.Media.Abstractions;
+using SuperSparklySelfie.Services;
 using Xamarin.Forms;
 
 namespace SuperSparklySelfie.ViewModels
@@ -37,9 +41,17 @@ namespace SuperSparklySelfie.ViewModels
                         PhotoSize = PhotoSize.Small
                     });
 
-                    ImageForSparkles = (StreamImageSource) ImageSource.FromStream(() => selfie.GetStream());
+                    var response = await SparkleService.SparkleSelfie(selfie.GetStream(), new CancellationToken());
+                    
+
+                    ImageForSparkles = (StreamImageSource) ImageSource.FromStream(() => response);
+
                 }
-            } catch { }
+            }
+            catch (Exception e)
+            {
+                
+            }
         }
     }
 }
