@@ -15,46 +15,54 @@ namespace SuperSparklySelfie.Services
     public static class SparkleService
     {
         private static string SelfieServiceUrl = "https://t.co/sPT0Hic6H7?amp=1";
-      
-        public static async Task<Stream> SparkleSelfie(Stream image, CancellationToken cancellationToken)
-        {
+        private static HttpClient client = new HttpClient();
 
-            byte[] fileBytes;
+        public static async Task<String> SparkleSelfie(Stream image, CancellationToken cancellationToken)
+        {
             BinaryReader binaryReader = new BinaryReader(image);
-            fileBytes = binaryReader.ReadBytes((int) image.Length);
+            byte[] fileBytes = binaryReader.ReadBytes((int)image.Length);          
 
-            using (var client = new HttpClient())
+            var imageBinaryContent = new ByteArrayContent(fileBytes);
+
+            using (var response = await client.PostAsync(SelfieServiceUrl, imageBinaryContent, cancellationToken))
             {
-                var apiUrl = new Uri(SelfieServiceUrl);
+                response.EnsureSuccessStatusCode();
 
-                var imageBinaryContent = new ByteArrayContent(fileBytes);
-
-                using (var response = await client.PostAsync(SelfieServiceUrl, imageBinaryContent, cancellationToken))
-                {
-                    response.EnsureSuccessStatusCode();
-
-
-                    // Eventually when the http side is working, need to check the response is not 102 (the code for processing)
-                    // Then find URL in response and that is the location of the image with sparkles applied
-                    return await response.Content.ReadAsStreamAsync();
-                }
+                var url = await response.Content.ReadAsStringAsync();
+                var isReady = await WaitForSuccess(url,30000);
+                return url;
             }
         }
-        
-        private static HttpContent CreateHttpContent(Stream content)
+
+        public static async Task<bool> WaitForSuccess(string url, int timeout)
         {
-            HttpContent httpContent = null;
+            bool shouldContinue = true;
+            var successTask = Task.Run(async ()=>{
+                var isSuccess = false;
+                while(!isSuccess)
+                {
+                    if(!shouldContinue)
+                        break;
+                    var resp = await client.GetAsync(url);
+                   // isSuccess = resp.IsSuccessStatusCode;
+                   var type = resp.Content.Headers.ContentType.ToString();
 
-            if (content != null)
+
+                    isSuccess = type != "{application/json; charset=utf-8}";
+                    if(!isSuccess)
+                        await Task.Delay(1000);
+                    else
+                         return true;
+                }
+                return isSuccess;
+            });
+            var result = await Task.WhenAny(Task.Delay(timeout)); 
+            shouldContinue = false;
+            if(result == successTask)
             {
-                byte[] fileBytes;
-                var binararyReader = new BinaryReader(content);
-                fileBytes = binararyReader.ReadBytes((int) content.Length);
-
-                var imageBinaryContent = new ByteArrayContent(fileBytes);
+                return successTask.Result;
             }
-
-            return httpContent;
-        }
+            return false;
+        }       
     }
 }

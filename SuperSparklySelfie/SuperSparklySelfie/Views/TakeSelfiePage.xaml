@@ -12,14 +12,13 @@
     </ContentPage.BindingContext>
 
     <ContentPage.Content>
-        <StackLayout Padding="15">
-            <Image Source="{Binding ImageForSparkles}"/>
+        <StackLayout Padding="15">          
             <Button 
                 Text="Sparkle Me!"
                 TextColor="White"
-                BackgroundColor="#CC0000"
-                VerticalOptions="EndAndExpand"
+                BackgroundColor="#CC0000"                
                 Command="{Binding TakePhotoCommand}"/>
+            <Image Source="{Binding ImageForSparkles}"    />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

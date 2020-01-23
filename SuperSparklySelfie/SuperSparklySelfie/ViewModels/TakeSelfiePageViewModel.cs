@@ -14,7 +14,7 @@ namespace SuperSparklySelfie.ViewModels
     public class TakeSelfiePageViewModel : BaseViewModel
     {
         private MediaFile selfie;
-        private StreamImageSource imageSource;
+        private Uri imageSource;
         public ICommand TakePhotoCommand { get; }
 
         public TakeSelfiePageViewModel()
@@ -22,7 +22,7 @@ namespace SuperSparklySelfie.ViewModels
             TakePhotoCommand = new Command(async () => await TakePhotoAsync());
         }
 
-        public StreamImageSource ImageForSparkles
+        public Uri ImageForSparkles
         {
             get => imageSource;
             set => SetProperty(ref imageSource, value);
@@ -41,10 +41,10 @@ namespace SuperSparklySelfie.ViewModels
                         PhotoSize = PhotoSize.Small
                     });
 
-                    var response = await SparkleService.SparkleSelfie(selfie.GetStream(), new CancellationToken());
-                    
+                    var imageUrl = await SparkleService.SparkleSelfie(selfie.GetStream(), new CancellationToken());
 
-                    ImageForSparkles = (StreamImageSource) ImageSource.FromStream(() => response);
+
+                    ImageForSparkles = new Uri(imageUrl);
 
                 }
             }
