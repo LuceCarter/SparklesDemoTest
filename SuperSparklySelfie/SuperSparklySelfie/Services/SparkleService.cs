@@ -18,22 +18,26 @@ namespace SuperSparklySelfie.Services
       
         public static async Task<Stream> SparkleSelfie(Stream image, CancellationToken cancellationToken)
         {
+
+            byte[] fileBytes;
+            BinaryReader binaryReader = new BinaryReader(image);
+            fileBytes = binaryReader.ReadBytes((int) image.Length);
+
             using (var client = new HttpClient())
-            using (var request = new HttpRequestMessage(HttpMethod.Post, SelfieServiceUrl))
-                using(var httpContent = CreateHttpContent(image))
+            {
+                var apiUrl = new Uri(SelfieServiceUrl);
+
+                var imageBinaryContent = new ByteArrayContent(fileBytes);
+
+                using (var response = await client.PostAsync(SelfieServiceUrl, imageBinaryContent, cancellationToken))
                 {
-                    request.Content = httpContent;
+                    response.EnsureSuccessStatusCode();
 
-                    using (var response = await client
-                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
-                        .ConfigureAwait(false))
-                    {
-                        response.EnsureSuccessStatusCode();
 
-                        var photoUrl = response.Content.ReadAsStringAsync();
-
-                        return await response.Content.ReadAsStreamAsync();
-                    }
+                    // Eventually when the http side is working, need to check the response is not 102 (the code for processing)
+                    // Then find URL in response and that is the location of the image with sparkles applied
+                    return await response.Content.ReadAsStreamAsync();
+                }
             }
         }
         
@@ -43,9 +47,11 @@ namespace SuperSparklySelfie.Services
 
             if (content != null)
             {
-                var ms = new MemoryStream();
-                ms.Seek(0, SeekOrigin.Begin);
-                httpContent = new StreamContent(ms);
+                byte[] fileBytes;
+                var binararyReader = new BinaryReader(content);
+                fileBytes = binararyReader.ReadBytes((int) content.Length);
+
+                var imageBinaryContent = new ByteArrayContent(fileBytes);
             }
 
             return httpContent;
