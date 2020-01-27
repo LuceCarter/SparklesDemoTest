@@ -14,8 +14,10 @@ namespace SuperSparklySelfie.Services
 {
     public static class SparkleService
     {
-        private static string SelfieServiceUrl = "https://t.co/sPT0Hic6H7?amp=1";
+        private static string SelfieServiceUrl = "https://supersparkly.azurewebsites.net/api/Upload?code=I8ZpTz91GHqru77rIVsx9eMp/XhJU0usKIHqT0Wc7jFx28mPAvpNmg==";
         private static HttpClient client = new HttpClient();
+        private static string downloadURL;
+        private static string sparkleGifUrl;
 
         public static async Task<String> SparkleSelfie(Stream image, CancellationToken cancellationToken)
         {
@@ -28,10 +30,20 @@ namespace SuperSparklySelfie.Services
             {
                 response.EnsureSuccessStatusCode();
 
-                var url = await response.Content.ReadAsStringAsync();
-                var isReady = await WaitForSuccess(url,30000);
-                return url;
+                downloadURL = await response.Content.ReadAsStringAsync();                
+                var isReady = await WaitForSuccess(downloadURL,30000);                
             }
+
+            using (var response = await client.GetAsync(downloadURL))
+            {
+                response.EnsureSuccessStatusCode();
+
+                sparkleGifUrl = await response.Content.ReadAsStringAsync();
+
+                return sparkleGifUrl;
+            }
+
+            
         }
 
         public static async Task<bool> WaitForSuccess(string url, int timeout)
@@ -44,11 +56,17 @@ namespace SuperSparklySelfie.Services
                     if(!shouldContinue)
                         break;
                     var resp = await client.GetAsync(url);
-                   // isSuccess = resp.IsSuccessStatusCode;
-                   var type = resp.Content.Headers.ContentType.ToString();
+                    // isSuccess = resp.IsSuccessStatusCode;
 
+                   var respString = await resp.Content.ReadAsStringAsync();
 
-                    isSuccess = type != "{application/json; charset=utf-8}";
+                    if (respString.Equals("102")) { isSuccess = false; }
+                    else {                       
+                        isSuccess = true;                  
+                    
+                    }
+
+                    
                     if(!isSuccess)
                         await Task.Delay(1000);
                     else
